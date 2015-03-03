@@ -1,0 +1,85 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+# Copyright 2010, 2014-2015 University of Oslo, Norway
+#
+# This file is part of PyBofh.
+#
+# PyBofh is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# PyBofh is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with PyBofh; if not, write to the Free Software Foundation,
+# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
+
+import getpass
+import locale
+import sys
+
+import bofh.readlineui
+import bofh.version
+import bofh.proto
+
+encoding = locale.getpreferredencoding()
+
+try:
+    import argparse
+except ImportError:
+    from bofh.ext import argparse
+
+argp = argparse.ArgumentParser(description=u"The Cerebrum Bofh client")
+argp.add_argument('-u', '--user',
+                  default=getpass.getuser(),
+                  metavar='UNAME',
+                  help=u"username")
+argp.add_argument('--url',
+                  default=None,
+                  metavar='URL',
+                  help=u"URL of a bofhd server.")
+argp.add_argument('-c', '--cert',
+                  default=None,
+                  metavar='PEM',
+                  help=u"CA certificate in PEM-format.")
+argp.add_argument('--insecure',
+                  default=False,
+                  action='store_true',
+                  help=u"Do not perform certificate checks.")
+argp.add_argument('-p', '--prompt',
+                  default='',
+                  metavar='PROMPT',
+                  help=u"Custom prompt")
+args = argp.parse_args()
+
+print args
+
+print (u"""This is PyBofh version %s
+
+Copyright (c) 2010, 2014 University of Oslo, Norway
+This is free software; see the source for copying conditions. There is NO
+warranty, not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
+       % bofh.version.version).encode(locale.getpreferredencoding())
+
+try:
+    conn = bofh.connect(url=args.url,
+                        cert=args.cert,
+                        insecure=args.insecure)
+    motd = conn.motd  # Test connection
+    conn.login(args.user, getpass.getpass())
+    print motd
+except bofh.proto.BofhError, e:
+    print e.args[0]
+    sys.exit(1)
+
+try:
+    bofh.readlineui.repl(conn, prompt=args.prompt)
+except Exception, e:
+    print 'Error: %s' % str(e)
+finally:
+    conn.logout()
