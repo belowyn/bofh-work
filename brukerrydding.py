@@ -1,4 +1,6 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
+#
 # Script for å hente ut navn og affiliations basert på en liste med brukernavn.
 # Output er en cvs-fil som kan åpnes i Excel. Husk å spesifisere UTF-8 på input i Excel.
 
