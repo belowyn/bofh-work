@@ -44,7 +44,10 @@ def read_userlist(file):
 
 def get_aff(conn, user):
 
-    dict = conn.run_command('person_info', user)
+    try:
+        dict = conn.run_command('person_info', user)
+    except bofh.proto.BofhError:
+        return user + ' *** Unknown account ***' 
     info = user
 
     #print user #dersom man ønsker å liste brukernavnene etterhvert som de blir prossesert
